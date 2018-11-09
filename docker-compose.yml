@@ -1,0 +1,14 @@
+version: '2'
+
+services:
+
+ rester-front:
+  container_name: rester-front
+  image: kevinpark/nginx-php-redis
+  restart: always
+  volumes:
+   - //Github/rester-frontend/default.conf:/etc/nginx/sites-available/default.conf:ro
+   - //Github/rester-frontend/cfg:/var/www/cfg:ro
+   - //Github/rester-frontend/src:/var/www/html
+  ports:
+  - '80:80'
