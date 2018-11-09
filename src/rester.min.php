@@ -1,0 +1,5 @@
+<?php $s0=dirname(__FILE__);if(is_file($s0.'/Mustache/Autoloader.php')){require$s0.'/Mustache/Autoloader.php';Mustache_Autoloader::register();}else{echo '
+You must include the mustache-php module.<br>
+Place the mustache in the root folder.<br>
+You can download the mustache here.
+<a href="https://github.com/bobthecow/mustache.php" target="_blank">https://github.com/bobthecow/mustache.php</a>';exit;}$i1=$_GET['rester-front'];if(substr($i1,-1)=='/' ||$i1==''){$i1.='index.html';}if(!is_file($i1)){echo file_get_contents($s0.'/404.html');exit;}$a2=new Mustache_Engine;$f3=file_get_contents($i1);$k4=array();foreach(glob($s0.'/../cfg/*.ini')as $u5){$x6=parse_ini_file($u5,true);if($x6)$g7=array_merge($k4,$x6);}if($k4[$i1])$g7=array_merge($k4['common'],$k4[$i1]);else $g7=$k4['common'];foreach(glob($s0.'/rester-pages/*.html')as $u5){$g7['rester-pages'][basename($u5,'.html')]=$a2->render(file_get_contents($u5),$g7);}echo $a2->render($f3,$g7);
