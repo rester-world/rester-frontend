@@ -10,5 +10,6 @@ services:
    - //Github/rester-frontend/default.conf:/etc/nginx/sites-available/default.conf:ro
    - //Github/rester-frontend/cfg:/var/www/cfg:ro
    - //Github/rester-frontend/src:/var/www/html
+   - //Github/rester-frontend/lib:/var/www/lib
   ports:
   - '80:80'
