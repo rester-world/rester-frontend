@@ -2,10 +2,22 @@ version: '2'
 
 services:
 
+ rester-api:
+  container_name: rester-api
+  image: kevinpark/rester-php
+  restart: always
+  volumes:
+  - //Github/rester-frontend/api:/var/www/html/modules
+  - //Github/rester-frontend/cfg-api:/var/www/cfg:ro
+  ports:
+    - '8080:80'
+
  rester-front:
   container_name: rester-front
   image: kevinpark/nginx-php-redis
   restart: always
+  links:
+    - rester-api:api.rester.kr
   volumes:
    - //Github/rester-frontend/default.conf:/etc/nginx/sites-available/default.conf:ro
    - //Github/rester-frontend/cfg:/var/www/cfg:ro
