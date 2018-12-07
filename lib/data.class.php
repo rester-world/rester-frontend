@@ -91,7 +91,7 @@ class data
             {
                 if($res['success'])
                 {
-                    self::$data = array_merge(self::$data,$res['data']);
+                    self::$data['pages'] = $res['data'];
                 }
                 else
                 {
@@ -100,9 +100,11 @@ class data
             }
             else
             {
-                throw new Exception("API 호출에 실패 하였습니다.");
+                throw new Exception("API 호출에 실패 하였습니다. ");
             }
         }
+
+        // parsing skin data
     }
 
     /**
