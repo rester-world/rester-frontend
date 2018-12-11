@@ -28,7 +28,7 @@ try
 /// include pages
 /// ============================================================================
     $pages = array();
-    foreach (glob($path_base.'/../html/rester-pages/*.html') as $filename)
+    foreach (glob($path_base.'/../html/rester-inc/*.html') as $filename)
     {
         $data = $mustache->render(file_get_contents($filename),cfg());
         $pages[basename($filename,'.html')] = $data;
