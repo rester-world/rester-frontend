@@ -2,31 +2,31 @@
 // base
 $path_base = dirname(__FILE__);
 
-/// ============================================================================
-/// include data module
-/// ============================================================================
-require $path_base.'/data.class.php';
-
-/// ============================================================================
-/// load mustache module
-/// ============================================================================
-if(is_file($path_base.'/Mustache/Autoloader.php'))
-{
-    require $path_base.'/Mustache/Autoloader.php';
-    Mustache_Autoloader::register();
-}
-else
-{
-    echo 'Missing Module: Mustache';
-    exit;
-}
-$mustache = new Mustache_Engine;
-
 try
 {
-/// ============================================================================
-/// include pages
-/// ============================================================================
+    //----------------------------------------------------------------------------
+    /// include data module
+    //----------------------------------------------------------------------------
+    require $path_base.'/data.class.php';
+
+    //----------------------------------------------------------------------------
+    /// load mustache module
+    //----------------------------------------------------------------------------
+    if(is_file($path_base.'/Mustache/Autoloader.php'))
+    {
+        require $path_base.'/Mustache/Autoloader.php';
+        Mustache_Autoloader::register();
+    }
+    else
+    {
+        echo 'Missing Module: Mustache';
+        exit;
+    }
+    $mustache = new Mustache_Engine;
+
+    //----------------------------------------------------------------------------
+    /// include pages
+    //----------------------------------------------------------------------------
     $pages = array();
     foreach (glob($path_base.'/../html/rester-inc/*.html') as $filename)
     {
@@ -35,9 +35,9 @@ try
     }
     data::Set($pages,data::inc);
 
-/// ============================================================================
-/// include and echo contents
-/// ============================================================================
+    //----------------------------------------------------------------------------
+    /// include and echo contents
+    //----------------------------------------------------------------------------
     $contents = file_get_contents(cfg(data::path));
     echo $mustache->render($contents,cfg());
 }

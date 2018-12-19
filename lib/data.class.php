@@ -7,12 +7,10 @@ class data
 {
     private static $data;	// data
 
-    const config = 'cfg';
-    const inc = 'rester-inc';
-    const path = 'path';
-    const path_key = 'rester-front';
-    const api_module = 'front';
-    const api_proc = 'page';
+    const config        = 'cfg';
+    const inc           = 'rester-inc';
+    const path          = 'path';
+    const path_key      = 'rester-front';
 
     private static function ResterApi($request_url, $body)
     {
@@ -27,7 +25,6 @@ class data
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_CUSTOMREQUEST => 'POST',
             CURLOPT_POSTFIELDS => json_encode($body),
-            //CURLOPT_HTTPHEADER => $this->request_headers,
         ));
 
         $response_body = curl_exec($ch);
@@ -51,7 +48,9 @@ class data
     {
         self::$data = [];
 
-        // include config files
+        //----------------------------------------------------------------------------------------------
+        /// include config files (*.ini)
+        //----------------------------------------------------------------------------------------------
         $cfg = array();
         foreach (glob(dirname(__FILE__).'/../cfg/*.ini') as $filename)
         {
@@ -60,18 +59,20 @@ class data
         }
         self::$data[self::config] = $cfg;
 
-        ///
+        //----------------------------------------------------------------------------------------------
         /// Check path
         /// Add default index.html
-        ///
+        //----------------------------------------------------------------------------------------------
         $path = $_GET[self::path_key];
         if(substr($path,-1)=='/' || $path=='')
         {
             $path.='index.html';
         }
 
-        // 스킨폴더 접근금지
-        // 파일 검사
+        //----------------------------------------------------------------------------------------------
+        /// 스킨폴더 접근금지
+        /// 파일 검사
+        //----------------------------------------------------------------------------------------------
         if(
             strpos($path,'rester-skins/')!==false ||
             strpos($path,'rester-inc/')!==false ||
@@ -83,7 +84,9 @@ class data
         self::$data[self::path] = $path;
         self::$data['current_path_'.substr($path,0,strrpos($path,'.'))] = true;
 
-        // include page data
+        //----------------------------------------------------------------------------------------------
+        /// include page data from api
+        //----------------------------------------------------------------------------------------------
         $api = $cfg['rester-api'];
         if($api['host'] && $api['port'])
         {
@@ -115,8 +118,6 @@ class data
                 self::$data['pages']['list'][] = $contents;
                 self::$data['pages'][$k] = $contents; // 연관배열
             }
-//            var_dump(self::$data['pages']);
-//            exit;
         }
     }
 
@@ -161,7 +162,7 @@ class data
  * @param string $section
  * @param string $key
  *
- * @return array
+ * @return array|string
  * @throws Exception
  */
 function cfg($section='', $key='')
