@@ -6,8 +6,6 @@ services:
   container_name: rester-front
   image: kevinpark/nginx-php-redis
   restart: always
-  links:
-    - rester-api:api.rester.kr
   volumes:
    - ./default.conf:/etc/nginx/sites-available/default.conf:ro
    - ./cfg:/var/www/cfg:ro

@@ -12,6 +12,11 @@ class data
     const path          = 'path';
     const path_key      = 'rester-front';
 
+    /**
+     * @param string $request_url
+     * @param array $body
+     * @return bool|mixed
+     */
     private static function ResterApi($request_url, $body)
     {
         $ch = curl_init();
@@ -82,6 +87,7 @@ class data
             $path = '404.html';
         }
         self::$data[self::path] = $path;
+        // set active
         self::$data['current_path_'.substr($path,0,strrpos($path,'.'))] = true;
 
         //----------------------------------------------------------------------------------------------
@@ -108,10 +114,14 @@ class data
             foreach($res['data'] as $k=>$v)
             {
                 $contents = $v;
+                //--------------------------------------------------------------------------------------
+                /// 스킨 데이터가 있을 경우 스킨을 파싱함
+                //--------------------------------------------------------------------------------------
                 if(isset($v['rester-skin']))
                 {
                     $filename = $path_base."/../html/rester-skins/{$v['rester-skin-name']}.html";
-                    if(!is_file($filename)) throw new Exception("skin 파일을 찾을 수 없습니다.: {$v['rester-skin-name']}.html");
+                    if(!is_file($filename))
+                        throw new Exception("skin 파일을 찾을 수 없습니다.: {$v['rester-skin-name']}.html");
 
                     $contents = $mustache->render(file_get_contents($filename),$v['rester-skin-contents']);
                 }
