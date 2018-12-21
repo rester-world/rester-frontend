@@ -87,22 +87,23 @@ class data
             $path = '404.html';
         }
         self::$data[self::path] = $path;
+
         // set active
+        // TODO 추후 제거
         self::$data['current_path_'.substr($path,0,strrpos($path,'.'))] = true;
 
         //----------------------------------------------------------------------------------------------
         /// include page data from api
         //----------------------------------------------------------------------------------------------
-        $api = $cfg['rester-api'];
-        if($api['host'] && $api['port'])
+        $api_url = null;
+        if($cfg['rester-api']['default']) $api_url = $cfg['rester-api']['default'];
+        foreach($cfg['rester-api'] as $_path=>$_url)
         {
-            $api_url = implode('/',array(
-                $api['host'].':'.$api['port'],
-                'v'.$api['version'],
-                $api['module'],
-                $api['proc']
-            ));
+            if(strpos($path,$_path)===0) $api_url = $_url;
+        }
 
+        if($api_url)
+        {
             $res = self::ResterApi($api_url,array('path'=>$path));
 
             // Api 검사
