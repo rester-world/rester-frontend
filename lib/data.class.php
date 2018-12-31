@@ -93,18 +93,32 @@ class data
         self::$data['current_path_'.substr($path,0,strrpos($path,'.'))] = true;
 
         //----------------------------------------------------------------------------------------------
+        /// include page common data from api
+        //----------------------------------------------------------------------------------------------
+        if($cfg['rester-api']['common'])
+        {
+            $common_api_url = $cfg['rester-api']['common'];
+            $res = self::ResterApi($common_api_url,array('path'=>$path,'query'=>$_GET));
+
+            // Api 검사
+            if(!is_array($res)) throw new Exception("rester-api-common API 호출에 실패 하였습니다. ");
+            if(!$res['success']) throw new Exception("rester-api-common API 호출에 실패 : ".$res['msg']);
+            self::$data['common'] = $res['data'];
+        }
+
+        //----------------------------------------------------------------------------------------------
         /// include page data from api
         //----------------------------------------------------------------------------------------------
         $api_url = null;
         if($cfg['rester-api']['default']) $api_url = $cfg['rester-api']['default'];
-        foreach($cfg['rester-api'] as $_path=>$_url)
+        foreach($cfg['rester-api-pages'] as $_path=>$_url)
         {
             if(strpos($path,$_path)===0) $api_url = $_url;
         }
 
         if($api_url)
         {
-            $res = self::ResterApi($api_url,array('path'=>$path));
+            $res = self::ResterApi($api_url,array('path'=>$path,'query'=>$_GET));
 
             // Api 검사
             if(!is_array($res)) throw new Exception("API 호출에 실패 하였습니다. ");
@@ -130,6 +144,7 @@ class data
                 self::$data['pages'][$k] = $contents; // 연관배열
             }
         }
+
     }
 
     /**
