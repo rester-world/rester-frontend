@@ -111,9 +111,12 @@ class data
         //----------------------------------------------------------------------------------------------
         $api_url = null;
         if($cfg['rester-api']['default']) $api_url = $cfg['rester-api']['default'];
-        foreach($cfg['rester-api-pages'] as $_path=>$_url)
+        if(isset($cfg['rester-api-pages']))
         {
-            if(strpos($path,$_path)===0) $api_url = $_url;
+            foreach($cfg['rester-api-pages'] as $_path=>$_url)
+            {
+                if(strpos($path,$_path)===0) $api_url = $_url;
+            }
         }
 
         if($api_url)
@@ -140,7 +143,7 @@ class data
 
                     $contents = $mustache->render(file_get_contents($filename),$v['rester-skin-contents']);
                 }
-                self::$data['pages']['list'][] = $contents;
+                if(isset($v['listable']) && $v['listable']) self::$data['pages']['list'][] = $contents;
                 self::$data['pages'][$k] = $contents; // 연관배열
             }
         }
