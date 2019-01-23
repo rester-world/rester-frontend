@@ -102,7 +102,7 @@ class data
 
             // Api 검사
             if(!is_array($res)) throw new Exception("rester-api-common API 호출에 실패 하였습니다. ");
-            if(!$res['success']) throw new Exception("rester-api-common API 호출에 실패 : ".$res['msg']);
+            if(!$res['success']) throw new Exception("rester-api-common API 호출에 실패 : ".implode(',',$res['error']));
             self::$data['common'] = $res['data'];
         }
 
@@ -121,30 +121,31 @@ class data
 
         if($api_url)
         {
-            $res = self::ResterApi($api_url,array('path'=>$path,'query'=>$_GET));
+            $res = self::ResterApi($api_url,['path'=>$path,'query'=>$_GET]);
 
             // Api 검사
             if(!is_array($res)) throw new Exception("API 호출에 실패 하였습니다. ");
-            if(!$res['success']) throw new Exception("API 호출에 실패 : ".$res['msg']);
+            if(!$res['success']) throw new Exception("API 호출에 실패 : ".implode(',',$res['error']));
 
-            $mustache = new Mustache_Engine;
-            $path_base = dirname(__FILE__);
-            foreach($res['data'] as $k=>$v)
+            if(is_array($res['data']))
             {
-                $contents = $v;
-                //--------------------------------------------------------------------------------------
-                /// 스킨 데이터가 있을 경우 스킨을 파싱함
-                //--------------------------------------------------------------------------------------
-                if(isset($v['rester-skin']))
+                foreach($res['data'] as $k=>$v)
                 {
-                    $filename = $path_base."/../html/rester-skins/{$v['rester-skin-name']}.html";
-                    if(!is_file($filename))
-                        throw new Exception("skin 파일을 찾을 수 없습니다.: {$v['rester-skin-name']}.html");
+                    $contents = $v;
 
-                    $contents = $mustache->render(file_get_contents($filename),$v['rester-skin-contents']);
+                    // 스킨 데이터가 있을 경우 스킨을 파싱함
+                    if(isset($v['rester-skin']))
+                    {
+                        $mustache = new Mustache_Engine;
+                        $filename = dirname(__FILE__)."/../html/rester-skins/{$v['rester-skin-name']}.html";
+                        if(!is_file($filename))
+                            throw new Exception("skin 파일을 찾을 수 없습니다.: {$v['rester-skin-name']}.html");
+
+                        $contents = $mustache->render(file_get_contents($filename),$v['rester-skin-contents']);
+                    }
+                    if(isset($v['listable']) && $v['listable']) self::$data['pages']['list'][] = $contents;
+                    self::$data['pages'][$k] = $contents; // 연관배열
                 }
-                if(isset($v['listable']) && $v['listable']) self::$data['pages']['list'][] = $contents;
-                self::$data['pages'][$k] = $contents; // 연관배열
             }
         }
 
