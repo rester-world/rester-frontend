@@ -1,1 +1,34 @@
 
+body {
+    margin:0;
+    padding:0;
+}
+
+header {
+    padding: 10px;
+    background-color: #ccc;
+}
+
+body.error header {
+    color: #fff;
+    background-color: red;
+}
+
+footer {
+    padding: 10px;
+    background-color: #ccc;
+}
+
+body.error footer {
+    color: #fff;
+    background-color: red;
+}
+
+.content {
+    padding:20px;
+}
+
+table { border-collapse: collapse; }
+table th, table td { border:1px solid #ccc; padding:10px; }
+table thead th, table thead td { background-color: #eee; }
+table tbody th, table tbody td { text-align:left; }

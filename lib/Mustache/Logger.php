@@ -17,9 +17,9 @@
  * The message MUST be a string or object implementing __toString().
  *
  * The message MAY contain placeholders in the form: {foo} where foo
- * will be replaced by the context data in key "foo".
+ * will be replaced by the context rester in key "foo".
  *
- * The context array can contain arbitrary data, the only assumption that
+ * The context array can contain arbitrary rester, the only assumption that
  * can be made by implementors is that if an Exception instance is given
  * to produce a stack trace, it MUST be in a key named "exception".
  *

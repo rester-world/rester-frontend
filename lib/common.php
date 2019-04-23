@@ -2,46 +2,34 @@
 // base
 $path_base = dirname(__FILE__);
 
+//----------------------------------------------------------------------------
+/// load mustache module
+//----------------------------------------------------------------------------
+if(is_file($path_base.'/Mustache/Autoloader.php'))
+{
+    require $path_base.'/Mustache/Autoloader.php';
+    Mustache_Autoloader::register();
+}
+else
+{
+    echo 'Missing Module: Mustache';
+    exit;
+}
+
+//----------------------------------------------------------------------------
+/// include rester module
+//----------------------------------------------------------------------------
+require $path_base . '/ResterFrontend.class.php';
+$rester = new ResterFrontend();
+
 try
 {
-    //----------------------------------------------------------------------------
-    /// include data module
-    //----------------------------------------------------------------------------
-    require $path_base.'/data.class.php';
+    $rester->init();
 
-    //----------------------------------------------------------------------------
-    /// load mustache module
-    //----------------------------------------------------------------------------
-    if(is_file($path_base.'/Mustache/Autoloader.php'))
-    {
-        require $path_base.'/Mustache/Autoloader.php';
-        Mustache_Autoloader::register();
-    }
-    else
-    {
-        echo 'Missing Module: Mustache';
-        exit;
-    }
-    $mustache = new Mustache_Engine;
-
-    //----------------------------------------------------------------------------
-    /// include pages
-    //----------------------------------------------------------------------------
-    $pages = array();
-    foreach (glob($path_base.'/../html/rester-inc/*.html') as $filename)
-    {
-        $data = $mustache->render(file_get_contents($filename),cfg());
-        $pages[basename($filename,'.html')] = $data;
-    }
-    data::Set($pages,data::inc);
-
-    //----------------------------------------------------------------------------
-    /// include and echo contents
-    //----------------------------------------------------------------------------
-    $contents = file_get_contents(cfg(data::path));
-    echo $mustache->render($contents,cfg());
 }
 catch (Exception $e)
 {
-    echo $e->getMessage();
+    $rester->error($e->getMessage());
 }
+
+$rester->run();
