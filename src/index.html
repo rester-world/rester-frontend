@@ -1,10 +1,36 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>{{&rester-inc.head}}</head>
 <body>
 {{&rester-inc.top}}
-<h1>{{welcome}}</h1>
-<p>Current url: {{current}}</p>
+<div class="content">
+    <h1>Welcome to the rester world!</h1>
+    <p><strong>Request URI</strong> {{request-uri}}</p>
+    <p>Rester frontend 첫 화면 입니다.</p>
+    <h2>시스템 폴더구조</h2>
+    <table>
+        <thead>
+        <tr>
+            <th>경로</th>
+            <th>설명</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <th>/rester-error</th>
+            <td>오류페이지 폴더</td>
+        </tr>
+        <tr>
+            <th>/rester-inc</th>
+            <td>포함가능 페이지 폴더</td>
+        </tr>
+        <tr>
+            <th>/rester-skin</th>
+            <td>스킨 페이지 폴더</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
 {{&rester-inc.footer}}
 </body>
 </html>

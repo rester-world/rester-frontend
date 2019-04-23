@@ -4,12 +4,13 @@ services:
 
  rester-front:
   container_name: rester-front
-  image: kevinpark/nginx-php-redis
+  image: rester/rester-docker
   restart: always
   volumes:
    - ./default.conf:/etc/nginx/sites-available/default.conf:ro
+   - ./default-ssl.conf:/etc/nginx/sites-available/default-ssl.conf:ro
    - ./cfg:/var/www/cfg:ro
-   - ./src:/var/www/html
+   - ./src:/var/www/src
    - ./lib:/var/www/lib
   ports:
   - '80:80'
