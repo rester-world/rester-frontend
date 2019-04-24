@@ -133,8 +133,7 @@ $mustache = new Mustache_Engine;
 
 $cfg = [];
 $path = '';
-$data = [];	// rester config data
-$html = '';  // result html
+$data = [];
 
 // include config files (*.ini)
 foreach (glob(path_cfg('*.ini')) as $filename)
@@ -142,6 +141,7 @@ foreach (glob(path_cfg('*.ini')) as $filename)
     $_cfg = parse_ini_file($filename,true);
     if($_cfg) $cfg = array_merge($cfg,$_cfg);
 }
+$data[__DATA_CONFIG__] = $cfg;
 
 try
 {
@@ -160,10 +160,11 @@ try
     }
 
     // 파일검사
-    if( !is_file($this->path_html($path)))
+    if( !is_file(path_html($path)))
     {
         throw new Exception("파일을 찾을 수 없습니다.({$path})");
     }
+    $data[__DATA_URI__] = $path;
 
     //----------------------------------------------------------------------------------------------
     /// include page data
@@ -209,7 +210,6 @@ try
         if($res['retCode']=='01') throw new Exception("로그인이 필요합니다.",'01');
         $data[__DATA_COMMON__] = $res['data'];
 
-
         if(is_array($res['data']))
         {
             foreach($res['data'] as $k=> $v)
@@ -231,7 +231,6 @@ try
         }
     }
 
-//$data[self::request_uri] = $path;
 }
 catch (Exception $e)
 {
@@ -241,7 +240,7 @@ catch (Exception $e)
 
 // include inc folder
 $data[__INC__] = [];
-foreach (glob($this->path_html_inc('*.html')) as $filename)
+foreach (glob(path_html_inc('*.html')) as $filename)
 {
     $__data = $mustache->render(file_get_contents($filename),$data);
     $data[__INC__][basename($filename,'.html')] = $__data;
