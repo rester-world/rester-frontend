@@ -32,3 +32,10 @@ table { border-collapse: collapse; }
 table th, table td { border:1px solid #ccc; padding:10px; }
 table thead th, table thead td { background-color: #eee; }
 table tbody th, table tbody td { text-align:left; }
+
+.clear-fix { clear:both; }
+
+.menu { background-color: #eee; border-bottom:1px solid #ccc; }
+.menu ul { list-style:none; margin:0; padding:0; }
+.menu ul li { float:left; }
+.menu ul li a { float:left; padding:10px; background-color:#eee; border-right: 1px solid #ccc; }
