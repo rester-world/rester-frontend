@@ -1,4 +1,70 @@
 <?php
+//-------------------------------------------------------------------------------
+/// set php.ini
+//-------------------------------------------------------------------------------
+set_time_limit(0);
+ini_set("session.use_trans_sid", 0); // PHPSESSID 를 자동으로 넘기지 않음
+ini_set("url_rewriter.tags","");     // 링크에 PHPSESSID 가 따라다니는것을 무력화
+ini_set("default_socket_timeout",500);
+
+ini_set("memory_limit", "1000M");     // 메모리 용량 설정.
+ini_set("post_max_size","1000M");
+ini_set("upload_max_filesize","1000M");
+
+//-------------------------------------------------------------------------------
+/// Set the global variables [_POST / _GET / _COOKIE]
+/// initial a post and a get variables.
+/// if not support short global variables, will be available.
+//-------------------------------------------------------------------------------
+if (isset($HTTP_POST_VARS) && !isset($_POST))
+{
+    $_POST   = &$HTTP_POST_VARS;
+    $_GET    = &$HTTP_GET_VARS;
+    $_SERVER = &$HTTP_SERVER_VARS;
+    $_COOKIE = &$HTTP_COOKIE_VARS;
+    $_ENV    = &$HTTP_ENV_VARS;
+    $_FILES  = &$HTTP_POST_FILES;
+    if (!isset($_SESSION))
+        $_SESSION = &$HTTP_SESSION_VARS;
+}
+
+// force to set register globals off
+// http://kldp.org/node/90787
+if(ini_get('register_globals'))
+{
+    foreach($_GET as $key => $value) { unset($$key); }
+    foreach($_POST as $key => $value) { unset($$key); }
+    foreach($_COOKIE as $key => $value) { unset($$key); }
+}
+
+function stripslashes_deep($value)
+{
+    $value = is_array($value) ? array_map('stripslashes_deep', $value) : stripslashes($value);
+    return $value;
+}
+
+//-------------------------------------------------------------------------------
+/// if get magic quotes gpc is on, set off
+/// set magic_quotes_gpc off
+//-------------------------------------------------------------------------------
+if (get_magic_quotes_gpc())
+{
+
+    $_POST = array_map('stripslashes_deep', $_POST);
+    $_GET = array_map('stripslashes_deep', $_GET);
+    $_COOKIE = array_map('stripslashes_deep', $_COOKIE);
+    $_REQUEST = array_map('stripslashes_deep', $_REQUEST);
+}
+
+//-------------------------------------------------------------------------------
+/// add slashes
+//-------------------------------------------------------------------------------
+if(is_array($_POST)) array_walk_recursive($_POST, function(&$item){ $item = addslashes($item); });
+if(is_array($_GET)) array_walk_recursive($_GET, function(&$item){ $item = addslashes($item); });
+if(is_array($_COOKIE)) array_walk_recursive($_COOKIE, function(&$item){ $item = addslashes($item); });
+
+session_start();
+
 //----------------------------------------------------------------------------
 /// Define
 //----------------------------------------------------------------------------
@@ -8,6 +74,9 @@ define('__QUERY_PATH__','rester-front');
 define('__CONFIG_REQUEST__','request');
 define('__CONFIG_REQUEST_COMMON__','common');
 define('__CONFIG_REQUEST_DEFAULT__','default');
+define('__CONFIG_REQUEST_LOGIN__','login');
+define('__CONFIG_REQUEST_LOGOUT__','logout');
+define('__CONFIG_REQUEST_JOIN__','join');
 define('__CONFIG_REQUEST_PAGES__','request-pages');
 define('__CONFIG_REQUEST_PARAM__','request-param');
 
@@ -16,6 +85,11 @@ define('__DATA_CONFIG__','cfg');
 define('__DATA_RESPONSE__','res');
 define('__DATA_COMMON__','common');
 define('__DATA_PAGE__','page');
+
+define('__SESSION_TOKEN__','token');
+
+define('__REQUEST__','rester-request');
+define('__REQUEST_NAME__','rester-request-name');
 
 //----------------------------------------------------------------------------
 /// Define function
@@ -54,7 +128,7 @@ function path_cfg($file='') { return dirname(__FILE__).'/../cfg/'.$file; }
  *
  * @return string
  */
-function api_uri($cfg, $name='')
+function get_api_uri($cfg, $name='')
 {
     $module_proc = '';
     if($cfg[__CONFIG_REQUEST__][$name]) $module_proc = $cfg[__CONFIG_REQUEST__][$name];
@@ -87,6 +161,10 @@ function request($cfg, $uri, $body)
     {
         $body = array_merge($body,$cfg[__CONFIG_REQUEST_PARAM__]);
     }
+    if($_SESSION[__SESSION_TOKEN__])
+    {
+        $body = array_merge($body,[__SESSION_TOKEN__=>$_SESSION[__SESSION_TOKEN__]]);
+    }
 
     $ch = curl_init();
 
@@ -114,6 +192,24 @@ function request($cfg, $uri, $body)
     }
     $res = json_decode($response_body,true);
     return $res;
+}
+
+/**
+ * @param array $cfg
+ *
+ * @return bool|string
+ * @throws Exception
+ */
+function rester_request($cfg)
+{
+    $uri = false;
+    if($_POST[__REQUEST__])
+    {
+        $name = $_POST[__REQUEST_NAME__];
+        $uri = get_api_uri($cfg, $name);
+        if(!$uri) throw new Exception("Not found Request Name");
+    }
+    return $uri;
 }
 
 //----------------------------------------------------------------------------
@@ -153,6 +249,54 @@ try
         $path.='index.html';
     }
 
+    // logout
+    // 로그하웃 하면 메인화면으로 돌아감
+    if($path=='logout')
+    {
+        if($api = get_api_uri($cfg, __CONFIG_REQUEST_LOGOUT__))
+        {
+            $res = request($cfg, $api, []);
+            if(!is_array($res) || !$res['success'])
+            {
+                throw new Exception("{$api} API 호출에 실패 하였습니다. ");
+            }
+            unset($_SESSION[__SESSION_TOKEN__]);
+            header("Location: /");
+            exit;
+        }
+        else
+        {
+            throw new Exception("로그아웃 API 설정이 없습니다.");
+        }
+    }
+
+    // API 호출이 있는지 검사
+    // 주로 업데이트/삭제/입력 등의 처리
+    if($rester_api = rester_request($cfg))
+    {
+        $res = request($cfg, $rester_api, $_POST);
+        if($res['success'])
+        {
+            // 세션저장
+            if($res['session'])
+            {
+                foreach($res['session'] as $k=>$v)
+                {
+                    $_SESSION[$k] = $v;
+                }
+            }
+            header("Content-type: application/json; charset=UTF-8");
+            echo json_encode($res);
+        }
+        else
+        {
+            header("Content-type: application/json; charset=UTF-8");
+            echo json_encode($res);
+        }
+        exit;
+    }
+
+
     // 스킨폴더 접근금지
     if( strpos($path,__SKINS__.'/')!==false || strpos($path,__INC__.'/')!==false )
     {
@@ -169,29 +313,34 @@ try
     //----------------------------------------------------------------------------------------------
     /// include page data
     //----------------------------------------------------------------------------------------------
+
+
     // common
-    if($api = api_uri($cfg, __CONFIG_REQUEST_COMMON__))
+    if($api = get_api_uri($cfg, __CONFIG_REQUEST_COMMON__))
     {
         $res = request($cfg, $api, ['path'=>$path,'query'=>$_GET]);
-
         if(is_array($res)) $data[__DATA_RESPONSE__] = $res;
+
+        // 로그인 체크
+        if(!$res['success'] && $res['retCode']=='01')
+        {
+            throw new Exception("로그인이 필요합니다.",'01');
+        }
+
         if(!is_array($res) || !$res['success'])
         {
             throw new Exception("{$api} API 호출에 실패 하였습니다. ");
         }
-
-        // 로그인 체크
-        if($res['retCode']=='01') throw new Exception("로그인이 필요합니다.",'01');
         $data[__DATA_COMMON__] = $res['data'];
     }
 
     // page
-    $api_uri = api_uri($cfg, __CONFIG_REQUEST_DEFAULT__);
+    $api_uri = get_api_uri($cfg, __CONFIG_REQUEST_DEFAULT__);
     if(isset($cfg[__CONFIG_REQUEST_PAGES__]))
     {
         foreach($cfg[__CONFIG_REQUEST_PAGES__] as $_path=>$_url)
         {
-            if(strpos($path,$_path)===0) $api_uri = api_uri($cfg, $_path);
+            if(strpos($path,$_path)===0) $api_uri = get_api_uri($cfg, $_path);
         }
     }
 
@@ -199,16 +348,19 @@ try
     {
         // Api 호출
         $res = request($cfg, $api_uri,['path'=>$path,'query'=>$_GET]);
-
         if(is_array($res)) $data[__DATA_RESPONSE__] = $res;
+
+        if(!$res['success'] && $res['retCode']=='01')
+        {
+            throw new Exception("로그인이 필요합니다.",'01');
+        }
+
         if(!is_array($res) || !$res['success'])
         {
             throw new Exception("{$api} API 호출에 실패 하였습니다. ");
         }
+        $data[__DATA_RESPONSE__] = $res['data'];
 
-        // 로그인 체크
-        if($res['retCode']=='01') throw new Exception("로그인이 필요합니다.",'01');
-        $data[__DATA_COMMON__] = $res['data'];
 
         if(is_array($res['data']))
         {
@@ -234,7 +386,14 @@ try
 }
 catch (Exception $e)
 {
-    $path = 'error.html';
+    if($e->getCode()=='01')
+    {
+        $path = 'login.html';
+    }
+    else
+    {
+        $path = 'error.html';
+    }
     $data['error-msg'] = $e->getMessage();
 }
 
