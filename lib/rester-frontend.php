@@ -89,7 +89,6 @@ define('__DATA_PAGE__','page');
 define('__SESSION_TOKEN__','token');
 
 define('__REQUEST__','rester-request');
-define('__REQUEST_NAME__','rester-request-name');
 
 //----------------------------------------------------------------------------
 /// Define function
@@ -148,14 +147,14 @@ function get_api_uri($cfg, $name='')
 }
 
 /**
- * @param array $cfg
+ * @param array  $cfg
  * @param string $uri
  * @param array  $body
+ * @param bool   $files
  *
  * @return bool|mixed
- * @throws Exception
  */
-function request($cfg, $uri, $body)
+function request($cfg, $uri, $body, $files=false)
 {
     if($cfg[__CONFIG_REQUEST_PARAM__])
     {
@@ -164,6 +163,15 @@ function request($cfg, $uri, $body)
     if($_SESSION[__SESSION_TOKEN__])
     {
         $body = array_merge($body,[__SESSION_TOKEN__=>$_SESSION[__SESSION_TOKEN__]]);
+    }
+
+    if($files==false)
+    {
+        $body = json_encode($body);
+    }
+    else
+    {
+        $body = array_merge($body,$files); // 1차원 배열만 전달됨
     }
 
     $ch = curl_init();
@@ -176,7 +184,7 @@ function request($cfg, $uri, $body)
         CURLOPT_TIMEOUT => 30,
         CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
         CURLOPT_CUSTOMREQUEST => 'POST',
-        CURLOPT_POSTFIELDS => json_encode($body),
+        CURLOPT_POSTFIELDS => $body,
     ));
 
     $response_body = curl_exec($ch);
@@ -205,7 +213,7 @@ function rester_request($cfg)
     $uri = false;
     if($_POST[__REQUEST__])
     {
-        $name = $_POST[__REQUEST_NAME__];
+        $name = $_POST[__REQUEST__];
         $uri = get_api_uri($cfg, $name);
         if(!$uri) throw new Exception("Not found Request Name");
     }
@@ -241,6 +249,8 @@ $data[__DATA_CONFIG__] = $cfg;
 
 try
 {
+    $data['GET'] = $_GET;
+
     // Check path
     // Add default index.html
     $path = $_GET[__QUERY_PATH__];
@@ -274,7 +284,18 @@ try
     // 주로 업데이트/삭제/입력 등의 처리
     if($rester_api = rester_request($cfg))
     {
-        $res = request($cfg, $rester_api, $_POST);
+
+        // 첨부파일 추가
+        $files = false;
+        foreach($_FILES as $name=>$FILE)
+        {
+            if(isset($FILE) && $FILE['error'] == UPLOAD_ERR_OK)
+            {
+                $files[$name] = new \CURLFile($FILE['tmp_name'], $FILE['type'], $FILE['name']);
+            }
+        }
+        $res = request($cfg, $rester_api, $_POST, $files);
+
         if($res['success'])
         {
             // 세션저장
@@ -357,7 +378,7 @@ try
 
         if(!is_array($res) || !$res['success'])
         {
-            throw new Exception("{$api} API 호출에 실패 하였습니다. ");
+            throw new Exception("{$api_uri} API 호출에 실패 하였습니다. ");
         }
         $data[__DATA_RESPONSE__] = $res['data'];
 
