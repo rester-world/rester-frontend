@@ -135,7 +135,7 @@ function get_api_uri($cfg, $name='')
     if(substr($module_proc,0,1)=='/') $module_proc = substr($module_proc, 1);
 
     $uri = null;
-    if($module_proc)
+    if($module_proc && $module_proc!='no-data')
     {
         $uri = implode('/', [
             $cfg[__CONFIG_REQUEST__]['host'].':'.$cfg[__CONFIG_REQUEST__]['port'],
