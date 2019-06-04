@@ -261,7 +261,7 @@ try
 
     // logout
     // 로그하웃 하면 메인화면으로 돌아감
-    if($path=='logout')
+    if($path=='logout.html')
     {
         if($api = get_api_uri($cfg, __CONFIG_REQUEST_LOGOUT__))
         {
@@ -286,12 +286,13 @@ try
     {
 
         // 첨부파일 추가
+        // 배열 형태의 파일도 가능하도록
         $files = false;
         foreach($_FILES as $name=>$FILE)
         {
             if(isset($FILE) && $FILE['error'] == UPLOAD_ERR_OK)
             {
-                $files[$name] = new \CURLFile($FILE['tmp_name'], $FILE['type'], $FILE['name']);
+                $files[$name] = new CURLFile($FILE['tmp_name'], $FILE['type'], $FILE['name']);
             }
         }
         $res = request($cfg, $rester_api, $_POST, $files);
