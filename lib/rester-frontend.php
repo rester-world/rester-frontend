@@ -147,6 +147,28 @@ function get_api_uri($cfg, $name='')
 }
 
 /**
+ * https://stackoverflow.com/questions/3772096/posting-multidimensional-array-with-php-and-curl
+ * @param       $arrays
+ * @param array $new
+ * @param null  $prefix
+ */
+function http_build_query_for_curl( $arrays, &$new = array(), $prefix = null ) {
+
+    if ( is_object( $arrays ) ) {
+        $arrays = get_object_vars( $arrays );
+    }
+
+    foreach ( $arrays AS $key => $value ) {
+        $k = isset( $prefix ) ? $prefix . '[' . $key . ']' : $key;
+        if ( is_array( $value ) OR is_object( $value )  ) {
+            http_build_query_for_curl( $value, $new, $k );
+        } else {
+            $new[$k] = $value;
+        }
+    }
+}
+
+/**
  * @param array  $cfg
  * @param string $uri
  * @param array  $body
@@ -165,14 +187,15 @@ function request($cfg, $uri, $body, $files=false)
         $body = array_merge($body,[__SESSION_TOKEN__=>$_SESSION[__SESSION_TOKEN__]]);
     }
 
-    if($files==false)
+    // 2차배열 이상 처리
+    $post_body = null;
+    http_build_query_for_curl($body, $post_body);
+
+    if($files)
     {
-        $body = json_encode($body);
+        $post_body = array_merge($post_body,$files); // 1차원 배열만 전달됨
     }
-    else
-    {
-        $body = array_merge($body,$files); // 1차원 배열만 전달됨
-    }
+
 
     $ch = curl_init();
 
@@ -184,7 +207,7 @@ function request($cfg, $uri, $body, $files=false)
         CURLOPT_TIMEOUT => 30,
         CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
         CURLOPT_CUSTOMREQUEST => 'POST',
-        CURLOPT_POSTFIELDS => $body,
+        CURLOPT_POSTFIELDS => $post_body,
     ));
 
     $response_body = curl_exec($ch);
@@ -192,6 +215,8 @@ function request($cfg, $uri, $body, $files=false)
     //echo curl_error($ch);
     //var_dump(curl_getinfo($ch));
     curl_close($ch);
+//    var_dump($response_body);
+//    exit;
 
     if($response_code != 200)
     {
@@ -288,11 +313,27 @@ try
         // 첨부파일 추가
         // 배열 형태의 파일도 가능하도록
         $files = false;
-        foreach($_FILES as $name=>$FILE)
+        foreach ($_FILES as $fname=>$FILE)
         {
-            if(isset($FILE) && $FILE['error'] == UPLOAD_ERR_OK)
+            // 단일 파일일 경우
+            if(!is_array($FILE['name']) && $FILE['name'])
             {
-                $files[$name] = new CURLFile($FILE['tmp_name'], $FILE['type'], $FILE['name']);
+                if(isset($FILE) && $FILE['error'] == UPLOAD_ERR_OK)
+                {
+                    $files[$fname] = new CURLFile($FILE['tmp_name'], $FILE['type'], $FILE['name']);
+                }
+            }
+            // 배열 파일일 경우
+            // 1차배열까지만 허용
+            else
+            {
+                foreach($FILE['name'] as $idx => $name)
+                {
+                    $type = $FILE['type'][$idx];
+                    $tmp_name = $FILE['tmp_name'][$idx];
+                    $error = $FILE['error'][$idx];
+                    $files[$fname."[{$idx}]"] = curl_file_create($tmp_name, $type, $name);
+                }
             }
         }
         $res = request($cfg, $rester_api, $_POST, $files);
