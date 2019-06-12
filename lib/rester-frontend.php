@@ -59,9 +59,9 @@ if (get_magic_quotes_gpc())
 //-------------------------------------------------------------------------------
 /// add slashes
 //-------------------------------------------------------------------------------
-if(is_array($_POST)) array_walk_recursive($_POST, function(&$item){ $item = addslashes($item); });
-if(is_array($_GET)) array_walk_recursive($_GET, function(&$item){ $item = addslashes($item); });
-if(is_array($_COOKIE)) array_walk_recursive($_COOKIE, function(&$item){ $item = addslashes($item); });
+//if(is_array($_POST)) array_walk_recursive($_POST, function(&$item){ $item = addslashes($item); });
+//if(is_array($_GET)) array_walk_recursive($_GET, function(&$item){ $item = addslashes($item); });
+//if(is_array($_COOKIE)) array_walk_recursive($_COOKIE, function(&$item){ $item = addslashes($item); });
 
 session_start();
 
