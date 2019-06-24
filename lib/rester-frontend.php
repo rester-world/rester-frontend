@@ -309,7 +309,6 @@ try
     // 주로 업데이트/삭제/입력 등의 처리
     if($rester_api = rester_request($cfg))
     {
-
         // 첨부파일 추가
         // 배열 형태의 파일도 가능하도록
         $files = false;
@@ -444,6 +443,14 @@ try
                 $data['pages'][$k] = $contents; // 연관배열
             }
         }
+    }
+
+    // common 키워드 제거
+    if($data[__DATA_COMMON__])
+    {
+        $common = $data[__DATA_COMMON__];
+        unset($data[__DATA_COMMON__]);
+        $data = array_merge($common, $data);
     }
 
 }
