@@ -147,6 +147,29 @@ function get_api_uri($cfg, $name='')
 }
 
 /**
+ * @return string
+ */
+function access_ip()
+{
+    // Check allows ip address
+    // Check ip from share internet
+    if (!empty($_SERVER['HTTP_CLIENT_IP']))
+    {
+        $access_ip=$_SERVER['HTTP_CLIENT_IP'];
+    }
+    //to check ip is pass from proxy
+    else if (!empty($_SERVER['HTTP_X_FORWARDED_FOR']))
+    {
+        $access_ip=$_SERVER['HTTP_X_FORWARDED_FOR'];
+    }
+    else
+    {
+        $access_ip=$_SERVER['REMOTE_ADDR'];
+    }
+    return $access_ip;
+}
+
+/**
  * https://stackoverflow.com/questions/3772096/posting-multidimensional-array-with-php-and-curl
  * @param       $arrays
  * @param array $new
@@ -380,7 +403,13 @@ try
     // common
     if($api = get_api_uri($cfg, __CONFIG_REQUEST_COMMON__))
     {
-        $res = request($cfg, $api, ['path'=>$path,'query'=>$_GET]);
+        $res = request($cfg, $api, [
+            'ip'=>access_ip(),
+            'agent'=>$_SERVER['HTTP_USER_AGENT'],
+            'referer'=>$_SERVER['HTTP_REFERER'],
+            'path'=>$path,
+            'query'=>$_GET
+        ]);
         if(is_array($res)) $data[__DATA_RESPONSE__] = $res;
 
         // 로그인 체크
