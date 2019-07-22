@@ -420,7 +420,7 @@ try
             {
                 if($site['host'] != $_SERVER['HTTP_HOST'])
                 {
-                    header('Location: '.$site['host']);
+                    header('Location: //'.$site['host']);
                     exit;
                 }
             }
