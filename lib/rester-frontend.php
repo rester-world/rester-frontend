@@ -412,6 +412,20 @@ try
         ]);
         if(is_array($res)) $data[__DATA_RESPONSE__] = $res;
 
+        // host 체크
+        // 서버에 있는 정보와 다를 경우 redirect
+        if(!filter_var($_SERVER['HTTP_HOST'], FILTER_VALIDATE_IP))
+        {
+            if($site = $res['data']['rester-site-info'])
+            {
+                if($site['host'] != $_SERVER['HTTP_HOST'])
+                {
+                    header('Location: '.$site['host']);
+                    exit;
+                }
+            }
+        }
+
         // 로그인 체크
         if(!$res['success'] && $res['retCode']=='01')
         {
