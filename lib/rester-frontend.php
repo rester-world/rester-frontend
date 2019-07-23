@@ -71,6 +71,7 @@ session_start();
 define('__INC__','rester-inc');
 define('__SKINS__','rester-skins');
 define('__QUERY_PATH__','rester-front');
+define('__QUERY_SUB__','rester-sub');
 define('__CONFIG_REQUEST__','request');
 define('__CONFIG_REQUEST_COMMON__','common');
 define('__CONFIG_REQUEST_DEFAULT__','default');
@@ -90,6 +91,18 @@ define('__SESSION_TOKEN__','token');
 
 define('__REQUEST__','rester-request');
 
+/** @var string $source */
+$source = 'src';
+$source_cfg = 'cfg';
+if($_GET[__QUERY_SUB__])
+{
+    $_src = trim($_GET[__QUERY_SUB__]);
+    if(substr($_src, 0,1)=='/') $_src = substr($_src, 1);
+    if(substr($_src, -1)=='/') $_src = substr($_src, 0, -1);
+    $source = $_src.'/html';
+    $source_cfg = $_src.'/cfg';
+}
+
 //----------------------------------------------------------------------------
 /// Define function
 //----------------------------------------------------------------------------
@@ -98,28 +111,44 @@ define('__REQUEST__','rester-request');
  *
  * @return string
  */
-function path_html($file='') { return dirname(__FILE__).'/../src/'.$file; }
+function path_html($file='')
+{
+    global $source;
+    return dirname(__FILE__).'/../'.$source.'/'.$file;
+}
 
 /**
  * @param string $file
  *
  * @return string
  */
-function path_html_inc($file='') { return dirname(__FILE__).'/../src/'.__INC__.'/'.$file; }
+function path_html_inc($file='')
+{
+    global $source;
+    return dirname(__FILE__).'/../'.$source.'/'.__INC__.'/'.$file;
+}
 
 /**
  * @param string $file
  *
  * @return string
  */
-function path_html_skins($file='') { return dirname(__FILE__).'/../src/'.__SKINS__.'/'.$file; }
+function path_html_skins($file='')
+{
+    global $source;
+    return dirname(__FILE__).'/../'.$source.'/'.__SKINS__.'/'.$file;
+}
 
 /**
  * @param string $file
  *
  * @return string
  */
-function path_cfg($file='') { return dirname(__FILE__).'/../cfg/'.$file; }
+function path_cfg($file='')
+{
+    global $source_cfg;
+    return dirname(__FILE__).'/../'.$source_cfg.'/'.$file;
+}
 
 /**
  * @param array $cfg
@@ -302,6 +331,7 @@ try
     // Check path
     // Add default index.html
     $path = $_GET[__QUERY_PATH__];
+
     if(substr($path,-1)=='/' || $path=='')
     {
         $path.='index.html';
